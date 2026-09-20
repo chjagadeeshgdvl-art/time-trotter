@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: time-trotter
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: JWT_ACCESS_SECRET
+        value: tt-access-secret-prod-2026
+      - key: JWT_REFRESH_SECRET
+        value: tt-refresh-secret-prod-2026
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: jackswill.5420@gmail.com
+      - key: SMTP_PASS
+        value: frzmbxpnclrebywm
+      - key: SMTP_USE_ETHEREAL
+        value: "false"
