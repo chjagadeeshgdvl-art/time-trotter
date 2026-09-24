@@ -241,6 +241,21 @@
     return false;
   }
 
+  async function ensureWSConnected() {
+    if (wsReady && ws && ws.readyState === WebSocket.OPEN) return true;
+
+    if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+      connectWS();
+    }
+
+    const start = Date.now();
+    while (Date.now() - start < 4000) {
+      if (wsReady && ws && ws.readyState === WebSocket.OPEN) return true;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return Boolean(wsReady && ws && ws.readyState === WebSocket.OPEN);
+  }
+
   function startPingLoop() {
     stopPingLoop();
     pingInterval = setInterval(() => {
@@ -841,9 +856,12 @@
   // ── Quick Match button ──
   const qmBtn = $("quickMatch");
   if (qmBtn) {
-    qmBtn.addEventListener("click", () => {
+    qmBtn.addEventListener("click", async () => {
       const name = $("createName")?.value.trim() || "Player";
-      if (!wsReady) { showToast("Connecting to server… try again.", true); return; }
+      setLoading("quickMatch", true);
+      const ok = await ensureWSConnected();
+      setLoading("quickMatch", false);
+      if (!ok) { showToast("Could not connect to multiplayer server. Please try again.", true); return; }
       sendWS({ type: "quick_match", name, difficulty: selectedDiff, token: accessToken });
     });
   }
@@ -851,17 +869,21 @@
   // ── Room browser: join from list ──
   const rbWrap = $("roomBrowserWrap");
   if (rbWrap) {
-    rbWrap.addEventListener("click", e => {
+    rbWrap.addEventListener("click", async e => {
       const btn = e.target.closest("[data-join-code]");
       if (!btn) return;
       const code = btn.dataset.joinCode;
       const name = $("joinName")?.value.trim() || $("createName")?.value.trim() || "Player";
-      if (!wsReady) { showToast("Connecting…", true); return; }
+      const ok   = await ensureWSConnected();
+      if (!ok) { showToast("Could not connect to server.", true); return; }
       sendWS({ type: "join_room", name, code, token: accessToken });
     });
     // Refresh room list button
     const refreshBtn = $("refreshRooms");
-    if (refreshBtn) refreshBtn.addEventListener("click", () => { if (wsReady) sendWS({ type: "browse_rooms" }); });
+    if (refreshBtn) refreshBtn.addEventListener("click", async () => {
+      const ok = await ensureWSConnected();
+      if (ok) sendWS({ type: "browse_rooms" });
+    });
   }
 
   $("goOffline")?.addEventListener("click", () => {
@@ -914,19 +936,25 @@
   });
 
   // ── Create room ──
-  $("createRoom")?.addEventListener("click", () => {
+  $("createRoom")?.addEventListener("click", async () => {
     const name = $("createName")?.value.trim() || "Player";
-    if (!wsReady) { showToast("Connecting to server… try again in a moment.", true); return; }
+    setLoading("createRoom", true);
+    const ok = await ensureWSConnected();
+    setLoading("createRoom", false);
+    if (!ok) { showToast("Could not connect to multiplayer server. Please try again.", true); return; }
     sendWS({ type: "create_room", name, difficulty: selectedDiff, token: accessToken });
   });
   $("createName")?.addEventListener("keydown", e => { if (e.key === "Enter") $("createRoom")?.click(); });
 
   // ── Join room ──
-  $("joinRoom")?.addEventListener("click", () => {
+  $("joinRoom")?.addEventListener("click", async () => {
     const name = $("joinName")?.value.trim() || "Player";
     const code = $("joinCode")?.value.trim().toUpperCase() || "";
     if (code.length !== 6) { showToast("Enter a valid 6-character room code.", true); return; }
-    if (!wsReady) { showToast("Connecting to server… try again in a moment.", true); return; }
+    setLoading("joinRoom", true);
+    const ok = await ensureWSConnected();
+    setLoading("joinRoom", false);
+    if (!ok) { showToast("Could not connect to multiplayer server. Please try again.", true); return; }
     sendWS({ type: "join_room", name, code, token: accessToken });
   });
   $("joinCode")?.addEventListener("input",  e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""); });
