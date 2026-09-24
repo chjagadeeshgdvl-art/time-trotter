@@ -14,7 +14,9 @@ const fs       = require("fs");
 const path     = require("path");
 const bcrypt   = require("bcryptjs");
 
-const DB_PATH = process.env.DB_PATH || "./data/timetrotter.db";
+const DB_PATH = process.env.VERCEL
+  ? path.join("/tmp", "timetrotter.db")
+  : (process.env.DB_PATH || "./data/timetrotter.db");
 
 // Ensure data directory exists
 const dataDir = path.dirname(path.resolve(DB_PATH));
