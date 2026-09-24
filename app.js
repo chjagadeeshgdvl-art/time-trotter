@@ -30,14 +30,15 @@
   let isHost         = false;
 
   /* Auth state — tokens kept in memory (not localStorage) for XSS safety */
-  let authAccessToken = null;      // short-lived JWT
-  let authUser        = null;      // { id, username, email, is_admin, elo }
-  let pendingOtpEmail = null;      // email awaiting OTP verification
+  let accessToken     = null;      // short-lived JWT
+  let currentUser     = null;      // { id, username, email, is_admin, elo }
+  let pendingEmail    = null;      // email awaiting OTP verification
+  let forgotPhase     = "email";   // 'email' | 'code'
   let forgotEmailSent = false;     // whether reset-code phase has started
-  let onlineState    = null;    // latest state_update from server
-  let waitingPlayers = [];      // [{id,name,connected}]
-  let selectedDiff   = "normal";
-  let isQuickMatch   = false;   // joined via Quick Match
+  let onlineState     = null;      // latest state_update from server
+  let waitingPlayers  = [];        // [{id,name,connected}]
+  let selectedDiff    = "normal";
+  let isQuickMatch    = false;     // joined via Quick Match
 
   // Offline state
   let game          = null;
@@ -183,9 +184,11 @@
   ───────────────────────────────────────────────────────────── */
   function connectWS() {
     clearTimeout(reconnTimer);
-    const proto = location.protocol === "https:" ? "wss:" : "ws:";
-    const port  = location.port || "3000";
-    const url   = `${proto}//${location.hostname}:${port}`;
+    const proto  = location.protocol === "https:" ? "wss:" : "ws:";
+    const wsPort = location.port
+      ? `:${location.port}`
+      : (location.hostname === "localhost" || location.hostname === "127.0.0.1" ? ":3000" : "");
+    const url    = `${proto}//${location.hostname}${wsPort}`;
 
     try {
       ws = new WebSocket(url);
@@ -406,6 +409,10 @@
     if ($("connStatus"))    $("connStatus").hidden    = false;
     if ($("lobbyChatWrap")) $("lobbyChatWrap").hidden = false;
     $("roomCodeDisplay").textContent = myRoomCode || "------";
+    const hintEl = document.querySelector(".room-code-hint");
+    if (hintEl) {
+      hintEl.innerHTML = `Open <strong style="color:#38bdf8">${location.origin}</strong> on other devices and enter this code.`;
+    }
 
     // Difficulty info
     const isHard = selectedDiff === "hard";
@@ -441,8 +448,8 @@
       let hostControls = "";
       if (isHost && p.id !== myPlayerId) {
         hostControls = `<div class="host-controls" style="margin-left:auto;display:flex;gap:4px">
-          <button class="host-ctrl-btn host-btn" data-action="makehost" data-player="${esc(p.id)}" type="button" title="Make Host">★</button>
-          <button class="host-ctrl-btn kick-btn" data-action="kick" data-player="${esc(p.id)}" type="button" title="Kick player">✕</button>
+          <button class="host-ctrl-btn host-btn" data-make-host="${esc(p.id)}" type="button" title="Make Host">★</button>
+          <button class="host-ctrl-btn kick-btn" data-kick="${esc(p.id)}" type="button" title="Kick player">✕</button>
         </div>`;
       }
 
@@ -1150,12 +1157,6 @@
 
   /* ── API base ── */
   const API = "/api";
-
-  /* ── In-memory token store ── */
-  let accessToken = null;
-  let currentUser = null;
-  let pendingEmail = null;
-  let forgotPhase = "email"; // 'email' | 'code'
 
   /* ── Expose to game IIFE ── */
   window._auth = {
