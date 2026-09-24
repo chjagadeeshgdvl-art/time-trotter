@@ -33,9 +33,10 @@ const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
 // Execute schema statements up to index creation
 db.exec(schema);
 
-// Migration: Ensure phone column exists on existing databases
+// Migration: Ensure phone column exists & verify all accounts
 try { db.exec("ALTER TABLE users ADD COLUMN phone TEXT;"); } catch {}
 try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone);"); } catch {}
+try { db.exec("UPDATE users SET is_verified = 1 WHERE is_verified = 0;"); } catch {}
 
 // Seed admin account on first run
 const adminExists = db.prepare("SELECT id FROM users WHERE is_admin = 1 LIMIT 1").get();

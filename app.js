@@ -1359,10 +1359,8 @@
     if (!username || !email || !password) return showAuthError("registerError", "Please fill in all required fields.");
     setLoading("registerSubmit", true);
     try {
-      await apiCall("POST", "/auth/register", { username, email, phone, password });
-      pendingEmail = email;
-      showForm("otpForm");
-      if ($("otpCode")) $("otpCode").value = "";
+      const data = await apiCall("POST", "/auth/register", { username, email, phone, password });
+      onLoginSuccess(data);
     } catch (err) {
       showAuthError("registerError", err.message);
     } finally {

@@ -226,16 +226,26 @@ async function handleAuth(req, res, pathname) {
 
     const hash = await bcrypt.hash(password, 12);
     const info = db.prepare(`
-      INSERT INTO users (username, email, phone, password_hash) VALUES (?, ?, ?, ?)
+      INSERT INTO users (username, email, phone, password_hash, is_verified) VALUES (?, ?, ?, ?, 1)
     `).run(username, email, phone || null, hash);
 
     db.prepare("INSERT INTO player_ratings (user_id) VALUES (?)").run(info.lastInsertRowid);
 
-    const otp = issueOtp(info.lastInsertRowid, "verify_email");
-    await sendOtpEmail(email, username, otp, "verify_email");
+    const newUser = db.prepare("SELECT * FROM users WHERE id = ?").get(info.lastInsertRowid);
+    const { accessToken, refreshToken } = issueTokens(newUser);
 
+    res.setHeader("Set-Cookie", refreshCookie(refreshToken));
     return json(res, 201, {
-      message: "Account created! A 6-digit verification code has been sent to your email inbox.",
+      message: "Account created successfully!",
+      accessToken,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        phone: newUser.phone,
+        is_admin: Boolean(newUser.is_admin),
+        elo: 1200
+      }
     });
   }
 
