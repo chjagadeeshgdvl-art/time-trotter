@@ -837,7 +837,7 @@
     qmBtn.addEventListener("click", () => {
       const name = $("createName")?.value.trim() || "Player";
       if (!wsReady) { showToast("Connecting to server… try again.", true); return; }
-      sendWS({ type: "quick_match", name, difficulty: selectedDiff });
+      sendWS({ type: "quick_match", name, difficulty: selectedDiff, token: accessToken });
     });
   }
 
@@ -850,7 +850,7 @@
       const code = btn.dataset.joinCode;
       const name = $("joinName")?.value.trim() || $("createName")?.value.trim() || "Player";
       if (!wsReady) { showToast("Connecting…", true); return; }
-      sendWS({ type: "join_room", name, code });
+      sendWS({ type: "join_room", name, code, token: accessToken });
     });
     // Refresh room list button
     const refreshBtn = $("refreshRooms");
@@ -910,7 +910,7 @@
   $("createRoom")?.addEventListener("click", () => {
     const name = $("createName")?.value.trim() || "Player";
     if (!wsReady) { showToast("Connecting to server… try again in a moment.", true); return; }
-    sendWS({ type: "create_room", name, difficulty: selectedDiff });
+    sendWS({ type: "create_room", name, difficulty: selectedDiff, token: accessToken });
   });
   $("createName")?.addEventListener("keydown", e => { if (e.key === "Enter") $("createRoom")?.click(); });
 
@@ -920,7 +920,7 @@
     const code = $("joinCode")?.value.trim().toUpperCase() || "";
     if (code.length !== 6) { showToast("Enter a valid 6-character room code.", true); return; }
     if (!wsReady) { showToast("Connecting to server… try again in a moment.", true); return; }
-    sendWS({ type: "join_room", name, code });
+    sendWS({ type: "join_room", name, code, token: accessToken });
   });
   $("joinCode")?.addEventListener("input",  e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""); });
   $("joinCode")?.addEventListener("keydown", e => { if (e.key === "Enter") $("joinRoom")?.click(); });

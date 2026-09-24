@@ -29,6 +29,19 @@ const { handleLeaderboard } = require("./routes/leaderboard.js");
 const { handleAdmin, setBroadcastFn } = require("./routes/admin.js");
 const db                    = require("./db/database.js");
 const { computeEloDeltas }  = require("./lib/elo.js");
+const jwt                   = require("jsonwebtoken");
+
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "tt-access-secret";
+
+function extractUserId(msg) {
+  if (!msg || !msg.token) return null;
+  try {
+    const decoded = jwt.verify(msg.token, ACCESS_SECRET);
+    return decoded.id || null;
+  } catch {
+    return null;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    Static file serving
@@ -436,13 +449,15 @@ function handleMessage(ws, msg) {
     const name       = sanitizeName(msg.name);
     const difficulty = msg.difficulty === "hard" ? "hard" : "normal";
     const { room, playerId } = createRoom(ws, name, difficulty);
+    const rp = room.players.get(playerId);
+    if (rp) rp.userId = extractUserId(msg);
 
     send(ws, {
       type: "room_created", code: room.code,
       playerId, isHost: true, difficulty,
       playerList: playerList(room),
     });
-    console.log(`[room ${room.code}] created by ${name} (${difficulty})`);
+    console.log(`[room ${room.code}] created by ${name} (${difficulty}, userId: ${rp?.userId || 'guest'})`);
     return;
   }
 
@@ -456,14 +471,14 @@ function handleMessage(ws, msg) {
     if (queueRoom && !queueRoom.game && queueRoom.players.size < 5) {
       // ── Join the queued room ──
       const playerId = genPlayerId();
-      const rp = { id: playerId, name, ws, connected: true, reconnectTimer: null };
+      const rp = { id: playerId, name, ws, connected: true, reconnectTimer: null, userId: extractUserId(msg) };
       queueRoom.players.set(playerId, rp);
       clientMeta.set(ws, { roomCode: queueCode, playerId });
 
       const list = playerList(queueRoom);
       send(ws, { type: "room_joined", code: queueCode, playerId, isHost: false, difficulty, playerList: list, quickMatch: true });
       broadcast(queueRoom, { type: "player_joined", playerId, name, playerList: list }, playerId);
-      console.log(`[room ${queueCode}] Quick Match: ${name} joined (${queueRoom.players.size} players)`);
+      console.log(`[room ${queueCode}] Quick Match: ${name} joined (${queueRoom.players.size} players, userId: ${rp.userId || 'guest'})`);
 
       // If room now has ≥3 and is "full enough" for auto-start, notify host
       if (queueRoom.players.size >= 3) {
@@ -475,6 +490,8 @@ function handleMessage(ws, msg) {
     } else {
       // ── Create a new room and queue it ──
       const { room, playerId } = createRoom(ws, name, difficulty);
+      const rp = room.players.get(playerId);
+      if (rp) rp.userId = extractUserId(msg);
       quickMatchQueues[difficulty] = room.code;
       send(ws, {
         type: "room_created", code: room.code,
@@ -482,7 +499,7 @@ function handleMessage(ws, msg) {
         playerList: playerList(room), quickMatch: true,
       });
       broadcast(room, { type: "toast", message: "Finding other players… share your room code too!" });
-      console.log(`[room ${room.code}] Quick Match queue opened by ${name} (${difficulty})`);
+      console.log(`[room ${room.code}] Quick Match queue opened by ${name} (${difficulty}, userId: ${rp?.userId || 'guest'})`);
     }
     return;
   }
@@ -502,6 +519,7 @@ function handleMessage(ws, msg) {
           clearTimeout(rp.reconnectTimer);
           rp.ws = ws;
           rp.connected = true;
+          if (extractUserId(msg)) rp.userId = extractUserId(msg);
           clientMeta.set(ws, { roomCode: code, playerId: pid });
           send(ws, { type: "rejoined", playerId: pid, code, difficulty: room.difficulty, playerList: playerList(room), isHost: pid === room.host });
           broadcast(room, { type: "player_rejoined", playerId: pid, name, playerList: playerList(room) }, pid);
@@ -516,14 +534,14 @@ function handleMessage(ws, msg) {
     if (room.players.size >= 5) { sendError(ws, "This room is full (max 5 players)."); return; }
 
     const playerId = genPlayerId();
-    const rp = { id: playerId, name, ws, connected: true, reconnectTimer: null };
+    const rp = { id: playerId, name, ws, connected: true, reconnectTimer: null, userId: extractUserId(msg) };
     room.players.set(playerId, rp);
     clientMeta.set(ws, { roomCode: code, playerId });
 
     const list = playerList(room);
     send(ws, { type: "room_joined", code, playerId, isHost: false, difficulty: room.difficulty, playerList: list });
     broadcast(room, { type: "player_joined", playerId, name, playerList: list }, playerId);
-    console.log(`[room ${code}] ${name} joined (${room.players.size} players)`);
+    console.log(`[room ${code}] ${name} joined (${room.players.size} players, userId: ${rp.userId || 'guest'})`);
     return;
   }
 
