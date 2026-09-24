@@ -7,3 +7,5 @@ data/*.db-wal
 scratch/
 .DS_Store
 Thumbs.db
+
+.vercel

@@ -18,17 +18,20 @@ const DB_PATH = process.env.VERCEL
   ? path.join("/tmp", "timetrotter.db")
   : (process.env.DB_PATH || "./data/timetrotter.db");
 
-// Ensure data directory exists
-const dataDir = path.dirname(path.resolve(DB_PATH));
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-// Open database (creates file if not present)
-const db = new Database(DB_PATH);
+let db;
+try {
+  const dataDir = path.dirname(path.resolve(DB_PATH));
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  db = new Database(DB_PATH);
+  try { db.pragma("journal_mode = WAL"); } catch {}
+} catch (err) {
+  console.warn("[DB] Fallback to in-memory database:", err.message);
+  db = new Database(":memory:");
+}
 
 // Performance pragmas
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
-db.pragma("synchronous = NORMAL");
+try { db.pragma("foreign_keys = ON"); } catch {}
+try { db.pragma("synchronous = NORMAL"); } catch {}
 
 // Run schema table creation
 const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
