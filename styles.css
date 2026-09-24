@@ -661,178 +661,200 @@ h3 { margin: 0 0 7px; font-size: 0.91rem; }
 .conn-ping { color: #a0a8b8; font-size: 0.64rem; }
 
 /* ═══════════════════════════════════════════════════════════════
-   ULTRA-RESPONSIVE MOBILE LAYOUT OVERRIDES (Smartphones & Tablets)
+   ULTRA-RESPONSIVE DYNAMIC FLEX UI SYSTEM (Mobile, Tablet, Laptop, 4K)
+   Supports 320px to 2560px+ with zero overflow and fluid aspect-ratio scaling
 ═══════════════════════════════════════════════════════════════ */
-@media (max-width: 1040px) {
-  .table-layout { grid-template-columns: minmax(250px,0.9fr) minmax(350px,1.1fr); }
-  .action-panel { grid-column: 1 / -1; }
-  .ask-list { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .waiting-layout { grid-template-columns: 1fr; }
+
+/* ── Fluid Root Container & Shell ── */
+.shell {
+  width: 100% !important;
+  max-width: 1440px !important;
+  min-height: 100dvh !important;
+  margin: 0 auto !important;
+  padding: clamp(10px, 2vw, 24px) clamp(10px, 2.5vw, 28px) !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-@media (max-width: 768px) {
-  .shell {
-    width: 100% !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-    padding-top: 10px !important;
-  }
+/* ── Fluid Header ── */
+.site-header {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(8px, 1.5vw, 16px) !important;
+  padding: clamp(10px, 1.2vw, 16px) clamp(12px, 1.8vw, 20px) !important;
+  margin-bottom: clamp(12px, 2vw, 24px) !important;
+  border-radius: var(--radius-sm) !important;
+}
 
-  .site-header {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 14px;
-    margin-bottom: 14px;
-  }
-  .brand {
-    font-size: 1.15rem;
-  }
-  .nav-actions {
-    gap: 6px;
-  }
-  .text-button {
-    font-size: 0.78rem;
-    padding: 6px 10px;
-  }
-  .auth-trigger-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
+.brand {
+  font-size: clamp(1rem, 2.5vw, 1.25rem) !important;
+}
 
-  .mode-select {
-    padding: 24px 14px;
-  }
-  .mode-select h1 {
-    font-size: clamp(1.8rem, 8vw, 2.5rem);
-  }
-  .mode-cards {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
+.header-right {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: clamp(6px, 1vw, 12px) !important;
+}
 
-  .scoreboard {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border-radius: 12px;
-  }
-  .player-chip {
-    min-height: 68px;
-    padding: 10px 12px;
-    background: #ffffff;
-  }
+/* ── Fluid Game Table & Panels ── */
+.game {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(12px, 1.8vw, 20px) !important;
+  flex: 1 !important;
+}
 
+.table-top {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(10px, 1.5vw, 18px) !important;
+  padding: clamp(12px, 1.8vw, 20px) !important;
+}
+
+.turn-status {
+  flex: 1 1 180px !important;
+  min-width: 160px !important;
+}
+
+/* ── Scoreboard Flex Grid ── */
+.scoreboard {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(110px, 18vw, 180px), 1fr)) !important;
+  gap: 1px !important;
+  background: var(--line) !important;
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden !important;
+}
+
+.player-chip {
+  padding: clamp(8px, 1.2vw, 15px) clamp(10px, 1.5vw, 16px) !important;
+  min-height: clamp(60px, 8vw, 79px) !important;
+}
+
+/* ── Core Table Layout (Fluid Columns) ── */
+.table-layout {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(300px, 1.3fr) minmax(230px, 0.9fr) !important;
+  gap: clamp(10px, 1.5vw, 20px) !important;
+  align-items: start !important;
+}
+
+.hand-panel, .matrix-panel, .action-panel {
+  padding: clamp(12px, 1.8vw, 21px) !important;
+  border-radius: var(--radius) !important;
+}
+
+/* ── Fluid Card Component Sizing ── */
+.playing-card.tt-card {
+  width: clamp(62px, 13vw, 96px) !important;
+  aspect-ratio: 96 / 140 !important;
+  height: auto !important;
+  padding: clamp(4px, 0.8vw, 8px) !important;
+  border-radius: clamp(8px, 1.2vw, 14px) !important;
+}
+
+.tt-card-brand {
+  font-size: clamp(0.3rem, 0.6vw, 0.42rem) !important;
+}
+
+.tt-card-top-icon {
+  font-size: clamp(0.6rem, 1.1vw, 0.85rem) !important;
+}
+
+.tt-card-center-val {
+  font-size: clamp(2rem, 4.2vw, 3.4rem) !important;
+  letter-spacing: -1.5px !important;
+}
+
+.tt-card-motto {
+  font-size: clamp(0.28rem, 0.5vw, 0.38rem) !important;
+}
+
+.tt-card-badge-triangle {
+  width: clamp(20px, 3.5vw, 32px) !important;
+  height: clamp(20px, 3.5vw, 32px) !important;
+}
+
+.tt-card-badge-icon {
+  font-size: clamp(0.48rem, 0.8vw, 0.75rem) !important;
+}
+
+/* ── Fluid Matrix & Hand Grids ── */
+.matrix {
+  display: grid !important;
+  grid-template-columns: repeat(var(--matrix-columns, 3), minmax(0, 1fr)) !important;
+  gap: clamp(6px, 1.2vw, 12px) !important;
+  padding: clamp(4px, 1vw, 10px) !important;
+}
+
+.matrix-card {
+  min-height: clamp(90px, 14vw, 140px) !important;
+}
+
+.hand {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: clamp(6px, 1vw, 10px) !important;
+  min-height: clamp(100px, 15vw, 140px) !important;
+}
+
+/* ── Fluid Ask Row & Buttons ── */
+.ask-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: clamp(6px, 1vw, 10px) !important;
+}
+
+.ask-button {
+  flex: 1 1 clamp(60px, 12vw, 100px) !important;
+  padding: clamp(8px, 1vw, 12px) !important;
+}
+
+/* ── Responsive Screen Breakpoints (Flex UI Flow) ── */
+@media (max-width: 1040px) {
   .table-layout {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .action-panel {
+    grid-column: 1 / -1 !important;
+  }
+  .waiting-layout {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
   }
-  
-  .hand-panel, .matrix-panel, .action-panel {
-    padding: 14px !important;
-    border-radius: 16px !important;
-  }
+}
 
-  .matrix {
-    grid-template-columns: repeat(var(--matrix-columns, 3), minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    padding: 8px !important;
+@media (max-width: 640px) {
+  .table-layout {
+    display: flex !important;
+    flex-direction: column !important;
   }
-
-  .matrix-card {
-    min-height: 115px !important;
-    height: 100% !important;
-  }
-
-  .playing-card.tt-card {
-    width: 78px !important;
-    height: 112px !important;
-    padding: 5px !important;
-    border-radius: 10px !important;
-  }
-
-  .tt-card-brand {
-    font-size: 0.35rem !important;
-    letter-spacing: 0.4px !important;
-  }
-  .tt-card-top-icon {
-    font-size: 0.7rem !important;
-  }
-  .tt-card-center-val {
-    font-size: 2.6rem !important;
-    letter-spacing: -1.5px !important;
-  }
-  .tt-card-motto {
-    font-size: 0.3rem !important;
-    letter-spacing: 0.3px !important;
-    line-height: 1.05 !important;
-  }
-  .tt-card-badge-triangle {
-    width: 28px !important;
-    height: 28px !important;
-    padding: 3px 4px !important;
-  }
-  .tt-card-badge-icon {
-    font-size: 0.6rem !important;
-  }
-
-  .hand {
-    gap: 6px !important;
-    min-height: 120px !important;
-  }
-
-  .ask-row {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .ask-button {
-    flex: 1;
-    min-width: 60px;
-    padding: 8px 10px;
-  }
-
   .rules-dialog, .leaderboard-modal, .admin-modal {
     width: min(96vw, 540px) !important;
-    padding: 16px !important;
-    border-radius: 16px !important;
+    max-height: 88dvh !important;
+    padding: 14px !important;
   }
-
   .rulebook-grid {
-    max-height: 60vh !important;
+    max-height: 55dvh !important;
   }
-  .conn-status { top: auto; bottom: 80px; right: 12px; }
+  .conn-status {
+    top: auto !important;
+    bottom: 70px !important;
+    right: 12px !important;
+  }
 }
 
 @media (max-width: 440px) {
-  .playing-card.tt-card {
-    width: 66px !important;
-    height: 98px !important;
-    padding: 4px !important;
-    border-radius: 8px !important;
-  }
-  .tt-card-brand {
-    font-size: 0.3rem !important;
-  }
-  .tt-card-top-icon {
-    font-size: 0.6rem !important;
-  }
-  .tt-card-center-val {
-    font-size: 2.1rem !important;
-    letter-spacing: -1px !important;
-  }
   .tt-card-motto {
     display: none !important;
   }
-  .tt-card-badge-triangle {
-    width: 22px !important;
-    height: 22px !important;
-    padding: 2px 3px !important;
-  }
-  .tt-card-badge-icon {
-    font-size: 0.5rem !important;
-  }
-  .matrix-card {
-    min-height: 100px !important;
+  .mode-cards {
+    grid-template-columns: 1fr !important;
   }
 }
 
